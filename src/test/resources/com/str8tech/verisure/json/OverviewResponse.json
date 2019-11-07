@@ -1,0 +1,52 @@
+{
+  "accountPermissions": {
+    "accountPermissionsHash": "1234567890abcdef="
+  },
+  "armState": {
+    "statusType": "DISARMED",
+    "date": "2019-08-16T10:28:28.000Z",
+    "name": "John Doe",
+    "changedVia": "CODE"
+  },
+  "armstateCompatible": true,
+  "controlPlugs": [],
+  "smartPlugs": [],
+  "doorLockStatusList": [{
+      "deviceLabel": "ABCD 1234",
+      "area": "Ytterdörr",
+      "method": "AUTO",
+      "lockedState": "LOCKED",
+      "currentLockState": "LOCKED",
+      "pendingLockState": "NONE",
+      "eventTime": "2019-11-07T06:36:14.000Z",
+      "secureModeActive": false,
+      "motorJam": false,
+      "paired": true
+    }],
+  "totalSmsCount": 0,
+  "climateValues": [],
+  "installationErrorList": [],
+  "pendingChanges": 0,
+  "ethernetModeActive": true,
+  "ethernetConnectedNow": true,
+  "heatPumps": [],
+  "smartCameras": [],
+  "latestEthernetStatus": {
+    "latestEthernetTestResult": true,
+    "testDate": "2019-11-05T22:18:12.000Z",
+    "protectedArea": "Proppskåp",
+    "deviceLabel": "EF3R 11EF"
+  },
+  "customerImageCameras": [],
+  "batteryProcess": {
+    "active": false
+  },
+  "userTracking": {
+    "installationStatus": "NOT_CONFIGURED"
+  },
+  "eventCounts": [],
+  "doorWindow": {
+    "reportState": false,
+    "doorWindowDevice": []
+  }
+}
