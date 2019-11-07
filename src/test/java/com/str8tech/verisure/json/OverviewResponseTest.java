@@ -71,7 +71,7 @@ public class OverviewResponseTest {
     JsonObject jsonObject = (JsonObject) Jsoner.deserialize(new InputStreamReader(getClass().getResourceAsStream("OverviewResponse.json"), StandardCharsets.UTF_8));
     Mapper mapper = new DozerBeanMapper();
     OverviewResponse overviewResponse = mapper.map(jsonObject, OverviewResponse.class);
-    assertEquals("2AYJ SYLB", overviewResponse.getDoorLockStatusList().get(0).getDeviceLabel());
+    assertEquals("ABCD 1234", overviewResponse.getDoorLockStatusList().get(0).getDeviceLabel());
     assertEquals("Ytterdörr", overviewResponse.getDoorLockStatusList().get(0).getArea());
   }
 }
