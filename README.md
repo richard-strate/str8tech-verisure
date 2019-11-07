@@ -1,5 +1,10 @@
-# str8tech-verisure
+# Verisure API Client
+
 A Java library used to access verisure installations over their HTTP/JSON. Inspired by https://github.com/persandstrom/python-verisure and https://github.com/wahlly/Verisure_Yale_Doorman_PHP_HTTP_Connection.
+
+# Source
+
+Source is available on github: https://github.com/richard-strate/str8tech-verisure
 
 # Maven
 
