@@ -52,4 +52,4 @@ Key | Meaning
 
 # 429 Too Many Requests
 
-The verisure API will detect an excessive amount of requests and block them. The threshold values are not clear but it has happened with integration tests during development - so it's not a high number. So forget about using the API for any kind of polling.
+The verisure API will detect an excessive amount of requests and block them. The threshold values are not clear but it has happened with integration tests during development (meaning: it's not a high number). Forget about using the API for any kind of polling and focus on connecting it to manual/few invocations.
