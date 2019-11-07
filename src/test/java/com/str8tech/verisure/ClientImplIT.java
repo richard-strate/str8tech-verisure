@@ -3,13 +3,7 @@
  * All rights reserved.
  * https://www.str8tech.com
  * 
- * This is a legal notice from Straight Technologies,
- * registered in Sweden.
- * 
- * This document is proprietary, confidential and is legally privileged.
- * Any un-authorised access to it is prohibited. Its disclosure, copying,
- * distribution or any action taken or omitted to be taken in reliance on
- * it is prohibited and may be unlawful.
+ * This program is free software under the MIT License
  */
 package com.str8tech.verisure;
 

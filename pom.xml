@@ -44,6 +44,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <netbeans.hint.license>str8tech-mit</netbeans.hint.license>
   </properties>
   <scm>
     <developerConnection>scm:git:git@github.com:richard-strate/str8tech-verisure.git</developerConnection>
