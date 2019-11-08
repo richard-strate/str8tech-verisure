@@ -37,6 +37,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * This class implements a simple API client towards the Verisure cloud API.
+ * After creating an instance, call the {@link #open() open()}-method before
+ * calling other "remote" methods like {@link #requestInstallations()}.
+ *
+ * Usage:
+ *
+ * <pre>
+ * try (ClientImpl client = new ClientImpl("userName", "password")) {
+ *   client.open();
+ *   client.requestInstallations();
+ *   ..
+ * }
+ * </pre>
  *
  * @author richard.strate
  */
@@ -50,11 +63,23 @@ public class ClientImpl implements Closeable {
 
   private CloseableHttpClient client;
 
+  /**
+   * Create the client with the supplied credentials.
+   *
+   * @param email Verisure e-mail (eg user name)
+   * @param password Verisure password
+   */
   public ClientImpl(String email, String password) {
     this.email = email;
     this.password = password;
   }
 
+  /**
+   * Call this to prepare the client (eg authorized) before using other "remote"
+   * methods.
+   *
+   * @throws IOException
+   */
   public void open() throws IOException {
     login();
   }
@@ -123,6 +148,17 @@ public class ClientImpl implements Closeable {
     return true;
   }
 
+  /**
+   * Request an overview of the specified installation. The available
+   * installations can be listed via {@link #requestInstallations() }-method.
+   *
+   * Before calling this method the client must be {@link #open() opened}.
+   *
+   * @param installationGiid
+   * @return
+   * @throws IOException
+   * @throws JsonException
+   */
   public OverviewResponse requestOverview(String installationGiid) throws IOException, JsonException {
     String url = baseUrl + "/installation/" + installationGiid + "/overview";
     LOG.debug("Request overview of '{}' using url: '{}'", installationGiid, url);
@@ -145,6 +181,15 @@ public class ClientImpl implements Closeable {
     }
   }
 
+  /**
+   * Request a listing of all available installations.
+   *
+   * Before calling this method the client must be {@link #open() opened}.
+   *
+   * @return
+   * @throws IOException
+   * @throws JsonException
+   */
   public List<InstallationResponse> requestInstallations() throws IOException, JsonException {
     String url = baseUrl + "/webaccount/" + URLEncoder.encode(email, StandardCharsets.UTF_8) + "/installation";
     LOG.debug("Listing installations using url: '{}'", url);
@@ -170,7 +215,13 @@ public class ClientImpl implements Closeable {
     }
   }
 
-  public void login() throws IOException {
+  /**
+   * Execute a login-scenario using credentials supplied at construct, this
+   * generates an authorized cookies which is registered by the HTTP client.
+   *
+   * @throws IOException
+   */
+  private void login() throws IOException {
     LOG.debug("Request login cookie for user '{}' {} password using url: '{}'", email, password == null ? "without" : "with", cookieUrl);
     // Crate a cookie
     client = HttpClientBuilder
@@ -194,6 +245,15 @@ public class ClientImpl implements Closeable {
 
   }
 
+  /**
+   * Try to parse out a
+   * {@link com.str8tech.verisure.json.ErrorResponse ErrorResponse} from the
+   * HTTP response body/content, catching any exceptions and returning NULL
+   * instead.
+   *
+   * @param response
+   * @return Returns the error response or NULL if something fails
+   */
   private ErrorResponse parseErrorContent(CloseableHttpResponse response) {
     if (response.getEntity() != null) {
       JsonObject jsonObject;
