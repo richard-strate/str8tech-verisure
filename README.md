@@ -1,13 +1,13 @@
 # Verisure API Client
 
-A Java library used to access verisure installations over their HTTP/JSON. Inspired by https://github.com/persandstrom/python-verisure and https://github.com/wahlly/Verisure_Yale_Doorman_PHP_HTTP_Connection.
+A Java library used to access verisure installations over their HTTP/JSON. Inspired by [python-verisure](https://github.com/persandstrom/python-verisure) and [Verisure_Yale_Doorman_PHP_HTTP_Connection](https://github.com/wahlly/Verisure_Yale_Doorman_PHP_HTTP_Connection).
 
 # Legal Disclaimer
 This software is not affiliated with Verisure Holding AB and the developers take no legal responsibility for the functionality or security of your Verisure Alarms and devices.
 
 # Source
 
-Source is available on github: https://github.com/richard-strate/str8tech-verisure
+Source is available on github: [str8tech-verisure](https://github.com/richard-strate/str8tech-verisure)
 
 # Maven
 
@@ -37,13 +37,13 @@ The str8tech repository (add to `settings.xml`):
 
 ## JSON HTTP Client
 
-Use (this)[https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/JsonHttpClient.java] class to execute requests towards the Versiure API and get access to the raw JSON responses (except for error messages, which are implicitly parsed and put into a (RemoteException)[https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/RemoteException.java]). This may allow the application to get access to data which is not exposed via the Java Object Client (below). 
+Use [this](https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/JsonHttpClient.java) class to execute requests towards the Versiure API and get access to the raw JSON responses (except for error messages, which are implicitly parsed and put into a [RemoteException](https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/RemoteException.java)). This may allow the application to get access to data which is not exposed via the Java Object Client (below). 
 
-HINT: All parsing from JSON into java objects done in the Java Object Client is available in (JsonParserImpl)[https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/JsonParserImpl.java].
+HINT: All parsing from JSON into java objects done in the Java Object Client is available in [JsonParserImpl](https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/JsonParserImpl.java).
 
 ## Java Object Client 
 
-Use (this)[https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/ClientImpl.java] class to execute requests towards the Versiure API and get resposnes parsed into java objets (instead of JSON as seen in the JSON HTTP Client). This is fast and eaiser to integrate but the responses might not contain all the information you're looking for. 
+Use [this](https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/ClientImpl.java) class to execute requests towards the Versiure API and get resposnes parsed into java objets (instead of JSON as seen in the JSON HTTP Client). This is fast and eaiser to integrate but the responses might not contain all the information you're looking for. 
 
 Review [this](https://github.com/richard-strate/str8tech-verisure/blob/master/src/test/java/com/str8tech/verisure/ClientImplIT.java) integration test for a simple example on how to use the client.
 
