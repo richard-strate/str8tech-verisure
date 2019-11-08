@@ -17,7 +17,7 @@ Include the dependency found in the Str8tech repository (add to `pom.xml`):
 <dependency>
   <groupId>com.str8tech</groupId>
   <artifactId>str8tech-verisure</artifactId>
-  <version>1</version>
+  <version>2</version>
 </dependency>  
 ````
 
