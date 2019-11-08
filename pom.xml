@@ -8,7 +8,7 @@
   </parent>
   <groupId>com.str8tech</groupId>
   <artifactId>str8tech-verisure</artifactId>
-  <version>2-SNAPSHOT</version>
+  <version>2</version>
   <packaging>jar</packaging>
   <dependencies>
     <dependency>
@@ -48,7 +48,7 @@
   </properties>
   <scm>
     <developerConnection>scm:git:git@github.com:richard-strate/str8tech-verisure.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>2</tag>
   </scm>
   <build>
     <plugins>
