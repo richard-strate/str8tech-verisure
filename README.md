@@ -35,7 +35,17 @@ The str8tech repository (add to `settings.xml`):
 
 # Usage
 
-Check out [this](https://github.com/richard-strate/str8tech-verisure/blob/master/src/test/java/com/str8tech/verisure/ClientImplIT.java) integration test for the best usage illustration.
+## JSON HTTP Client
+
+Use (this)[https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/JsonHttpClient.java] class to execute requests towards the Versiure API and get access to the raw JSON responses (except for error messages, which are implicitly parsed and put into a (RemoteException)[https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/RemoteException.java]). This may allow the application to get access to data which is not exposed via the Java Object Client (below). 
+
+HINT: All parsing from JSON into java objects done in the Java Object Client is available in (JsonParserImpl)[https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/JsonParserImpl.java].
+
+## Java Object Client 
+
+Use (this)[https://github.com/richard-strate/str8tech-verisure/blob/master/src/main/java/com/str8tech/verisure/ClientImpl.java] class to execute requests towards the Versiure API and get resposnes parsed into java objets (instead of JSON as seen in the JSON HTTP Client). This is fast and eaiser to integrate but the responses might not contain all the information you're looking for. 
+
+Review [this](https://github.com/richard-strate/str8tech-verisure/blob/master/src/test/java/com/str8tech/verisure/ClientImplIT.java) integration test for a simple example on how to use the client.
 
 # Integration test setup
 
