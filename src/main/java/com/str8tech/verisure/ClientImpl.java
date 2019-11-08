@@ -7,32 +7,13 @@
  */
 package com.str8tech.verisure;
 
-import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonException;
-import com.github.cliftonlabs.json_simple.JsonObject;
-import com.github.cliftonlabs.json_simple.Jsoner;
 import com.str8tech.verisure.json.ErrorResponse;
 import com.str8tech.verisure.json.InstallationResponse;
-import com.str8tech.verisure.json.LockRequest;
 import com.str8tech.verisure.json.OverviewResponse;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.LinkedList;
 import java.util.List;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.dozer.DozerBeanMapper;
-import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +21,9 @@ import org.slf4j.LoggerFactory;
  * This class implements a simple API client towards the Verisure cloud API.
  * After creating an instance, call the {@link #open() open()}-method before
  * calling other "remote" methods like {@link #requestInstallations()}.
+ *
+ * The class basically uses {@link JsonHttpClient} to execute all requests and
+ * adds parsing via a {@link JsonParser}.
  *
  * Usage:
  *
@@ -56,22 +40,33 @@ import org.slf4j.LoggerFactory;
 public class ClientImpl implements Closeable {
 
   private static final Logger LOG = LoggerFactory.getLogger(ClientImpl.class);
-  private final String email;
-  private final String password;
   private final String baseUrl = "https://e-api01.verisure.com/xbn/2";
   private final String cookieUrl = baseUrl + "/cookie";
 
-  private CloseableHttpClient client;
+  private final JsonHttpClient jsonClient;
+  private final JsonParser jsonParser;
 
   /**
-   * Create the client with the supplied credentials.
+   * Create the client with the supplied credentials. Will create an instance of
+   * default classes {@link JsonParserImpl} and {@link JsonHttpClient}.
    *
    * @param email Verisure e-mail (eg user name)
    * @param password Verisure password
    */
   public ClientImpl(String email, String password) {
-    this.email = email;
-    this.password = password;
+    this(new JsonHttpClient(email, password), new JsonParserImpl());
+  }
+
+  /**
+   * Create the client with a custom {@link JsonHttpClient} and
+   * {@link JsonParser}.
+   *
+   * @param jsonClient
+   * @param jsonParser
+   */
+  public ClientImpl(JsonHttpClient jsonClient, JsonParser jsonParser) {
+    this.jsonClient = jsonClient;
+    this.jsonParser = jsonParser;
   }
 
   /**
@@ -81,11 +76,12 @@ public class ClientImpl implements Closeable {
    * @throws IOException
    */
   public void open() throws IOException {
-    login();
+    jsonClient.open();
   }
 
   @Override
   public void close() {
+    jsonClient.close();
   }
 
   /**
@@ -100,7 +96,15 @@ public class ClientImpl implements Closeable {
    * @throws IOException
    */
   public boolean unlock(String installationGiid, String deviceLabel, String doorCode) throws IOException {
-    return this.doLockAction(LockAction.unlock, installationGiid, deviceLabel, doorCode);
+    try {
+      jsonClient.requestUnlock(installationGiid, deviceLabel, doorCode);
+      return true;
+    } catch (RemoteException ex) {
+      if ((ex.getErrorResponse() != null) && ex.getErrorResponse().getErrorCode().equals(ErrorResponse.EC_DOORLOCK_STATE_ALREADY_SET)) {
+        return false;
+      }
+      throw new IOException("Failed to unlock the door '" + deviceLabel + "'", ex);
+    }
   }
 
   /**
@@ -115,37 +119,15 @@ public class ClientImpl implements Closeable {
    * @throws IOException
    */
   public boolean lock(String installationGiid, String deviceLabel, String doorCode) throws IOException {
-    return this.doLockAction(LockAction.lock, installationGiid, deviceLabel, doorCode);
-  }
-
-  enum LockAction {
-    lock,
-    unlock
-  }
-
-  private boolean doLockAction(LockAction lockAction, String installationGiid, String deviceLabel, String doorCode) throws IOException {
-    String url = baseUrl + "/installation/" + installationGiid + "/device/" + URLEncoder.encode(deviceLabel, StandardCharsets.UTF_8) + "/" + lockAction.name();
-    LOG.debug("Request {} using url: '{}'", lockAction.name(), url);
-    HttpPut request = new HttpPut(url);
-    request.setHeader("Content-Type", "application/json;charset=UTF-8");
-    request.setHeader("Accept", "application/json");
-    LockRequest lockRequest = new LockRequest(doorCode);
-    String json = Jsoner.serialize(lockRequest);
-    request.setEntity(new StringEntity(json));
-    try (CloseableHttpResponse response = client.execute(request)) {
-      if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        ErrorResponse errorResponse = parseErrorContent(response);
-        if (errorResponse != null && errorResponse.getErrorCode().equals(ErrorResponse.EC_DOORLOCK_STATE_ALREADY_SET)) {
-          return false;
-        }
-        if (errorResponse != null) {
-          throw new IOException("Failed to " + lockAction.name() + "  the door with label '" + deviceLabel + "' of installation '" + installationGiid + "', response: " + errorResponse);
-        } else {
-          throw new IOException("Failed to " + lockAction.name() + "  the door with label '" + deviceLabel + "' of installation '" + installationGiid + "', status code: " + response.getStatusLine().getStatusCode());
-        }
+    try {
+      jsonClient.requestLock(installationGiid, deviceLabel, doorCode);
+      return true;
+    } catch (RemoteException ex) {
+      if ((ex.getErrorResponse() != null) && ex.getErrorResponse().getErrorCode().equals(ErrorResponse.EC_DOORLOCK_STATE_ALREADY_SET)) {
+        return false;
       }
+      throw new IOException("Failed to lock the door '" + deviceLabel + "'", ex);
     }
-    return true;
   }
 
   /**
@@ -160,25 +142,13 @@ public class ClientImpl implements Closeable {
    * @throws JsonException
    */
   public OverviewResponse requestOverview(String installationGiid) throws IOException, JsonException {
-    String url = baseUrl + "/installation/" + installationGiid + "/overview";
-    LOG.debug("Request overview of '{}' using url: '{}'", installationGiid, url);
-    HttpGet request = new HttpGet(url);
-    request.setHeader("Content-Type", "application/json;charset=UTF-8");
-    request.setHeader("Accept", "application/json");
-    //request.setHeader("APPLICATION_ID", "VS_APP_IPHONE");
-    try (CloseableHttpResponse response = client.execute(request)) {
-      if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        ErrorResponse errorResponse = parseErrorContent(response);
-        if (errorResponse != null) {
-          throw new IOException("Failed to fetch overview of installation '" + installationGiid + "', response: " + errorResponse);
-        } else {
-          throw new IOException("Failed to fetch overview of installation '" + installationGiid + "', status code: " + response.getStatusLine().getStatusCode());
-        }
-      }
-      JsonObject jsonObject = (JsonObject) Jsoner.deserialize(new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8));
-      Mapper mapper = new DozerBeanMapper();
-      return mapper.map(jsonObject, OverviewResponse.class);
+    String json;
+    try {
+      json = jsonClient.requestOverview(installationGiid);
+    } catch (RemoteException ex) {
+      throw new IOException("Failed to request overview for installation '" + installationGiid + "'", ex);
     }
+    return jsonParser.parseOverviewResponse(json);
   }
 
   /**
@@ -191,82 +161,13 @@ public class ClientImpl implements Closeable {
    * @throws JsonException
    */
   public List<InstallationResponse> requestInstallations() throws IOException, JsonException {
-    String url = baseUrl + "/webaccount/" + URLEncoder.encode(email, StandardCharsets.UTF_8) + "/installation";
-    LOG.debug("Listing installations using url: '{}'", url);
-    HttpGet request = new HttpGet(url);
-    request.setHeader("Content-Type", "application/json;charset=UTF-8");
-    request.setHeader("Accept", "application/json");
-    try (CloseableHttpResponse response = client.execute(request)) {
-      if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        ErrorResponse errorResponse = parseErrorContent(response);
-        if (errorResponse != null) {
-          throw new IOException("Failed to fetch installations, response: " + errorResponse);
-        } else {
-          throw new IOException("Failed to fetch installations, status code: " + response.getStatusLine().getStatusCode());
-        }
-      }
-      JsonArray jsonArray = (JsonArray) Jsoner.deserialize(new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8));
-      Mapper mapper = new DozerBeanMapper();
-      List<InstallationResponse> ret = new LinkedList<>();
-      jsonArray.forEach((jsonObject) -> {
-        ret.add(mapper.map(jsonObject, InstallationResponse.class));
-      });
-      return ret;
+    String json;
+    try {
+      json = jsonClient.requestInstallations();
+    } catch (RemoteException ex) {
+      throw new IOException("Failed to request installations", ex);
     }
-  }
-
-  /**
-   * Execute a login-scenario using credentials supplied at construct, this
-   * generates an authorized cookies which is registered by the HTTP client.
-   *
-   * @throws IOException
-   */
-  private void login() throws IOException {
-    LOG.debug("Request login cookie for user '{}' {} password using url: '{}'", email, password == null ? "without" : "with", cookieUrl);
-    // Crate a cookie
-    client = HttpClientBuilder
-            .create()
-            .build();
-    HttpPost request = new HttpPost(cookieUrl);
-    request.setHeader("Content-Type", "application/json;charset=UTF-8");
-    request.setHeader("Accept", "application/json");
-    String authBasicValue = Base64.getEncoder().encodeToString(("CPE/" + email + ":" + (password == null ? "" : password)).getBytes(StandardCharsets.UTF_8));
-    request.setHeader("Authorization", "Basic " + authBasicValue);
-    try (final CloseableHttpResponse response = client.execute(request)) {
-      if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        ErrorResponse errorResponse = parseErrorContent(response);
-        if (errorResponse != null) {
-          throw new IOException("Failed to login as '" + email + "', response: " + errorResponse);
-        } else {
-          throw new IOException("Failed to login as '" + email + "', status code: " + response.getStatusLine().getStatusCode());
-        }
-      }
-    }
-
-  }
-
-  /**
-   * Try to parse out a
-   * {@link com.str8tech.verisure.json.ErrorResponse ErrorResponse} from the
-   * HTTP response body/content, catching any exceptions and returning NULL
-   * instead.
-   *
-   * @param response
-   * @return Returns the error response or NULL if something fails
-   */
-  private ErrorResponse parseErrorContent(CloseableHttpResponse response) {
-    if (response.getEntity() != null) {
-      JsonObject jsonObject;
-      try {
-        jsonObject = (JsonObject) Jsoner.deserialize(new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8));
-      } catch (IOException | UnsupportedOperationException | JsonException ex) {
-        return null;
-      }
-      Mapper mapper = new DozerBeanMapper();
-      return mapper.map(jsonObject, ErrorResponse.class);
-    } else {
-      return null;
-    }
+    return jsonParser.parseInstallationResponses(json);
   }
 
 }
